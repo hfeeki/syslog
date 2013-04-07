@@ -1,3 +1,0 @@
-{application,syslog}.
-{packages,[]}.
-{modules,[syslog,syslog_h,syslog_monitor,syslog_rfc3164,syslog_rfc5424]}.
