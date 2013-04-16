@@ -1,4 +1,4 @@
-@title syslog - An RFC3164 and RF5424 compliant logger for 'error_logger' reports.
+@title syslog - An RFC3164 and RF5424 compliant logging framework for Erlang.
 
 @doc
 
@@ -121,6 +121,13 @@ The <code>syslog</code> application will log everything logged with the standard
 This should be done via the API functions provided by the <code>syslog</code> module
 which provides functions similar to the ones provided by the <code>error_logger</code>
 module (see the <code>*msg/1,2</code> functions).
+
+=== Supervision ===
+
+<img src="http://schlagert.github.com/syslog/syslog.svg" alt="syslog supervision"/>
+
+For curiosity, the above illustration shows the very simple supervision
+hierarchy used by the <code>syslog</code> application.
 <script>
 // Jump directly to a referenced url given in trailing '[]:...'-notation
 function goto(tag) { parent.document.location.href = url(tag); }
