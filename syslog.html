@@ -14,15 +14,14 @@
    Main module of the <code>syslog</code> application.
 
 <p><b>Behaviours:</b> <a href="application.html"><tt>application</tt></a>, <a href="supervisor.html"><tt>supervisor</tt></a>.</p>
-<p><b>This module defines the <tt>syslog</tt> behaviour.</b><br> Required callback functions: <tt>to_iolist/1</tt>.</p>
 
 <h2><a name="description">Description</a></h2><p>
-   Main module of the <code>syslog</code> application. This module contains functions to   
-enable or disable logging via syslog as well as two convinience functions   
-to log messages with a certain severity.</p>
+   Main module of the <code>syslog</code> application. This module contains functions to
+   send messages directly over Syslog bypassing the <code>error_logger</code>. Like its
+   <code>error_logger</code> counterparts these functions never fail.</p>
   
-   This module also defines the behaviour that must be implemented by protocol
-   backends.
+   The logging functions have the same name than the <code>error_logger</code> functions
+   making switching from one to another easy.
 <h2><a name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-facility">facility()</a></h3>
@@ -30,7 +29,7 @@ to log messages with a certain severity.</p>
 
 
 <h3 class="typedecl"><a name="type-option">option()</a></h3>
-<p><tt>option() = {msg_queue_limit, pos_integer() | infinity} | {protocol, rfc3164 | rfc5424} | {dest_host, <a href="inet.html#type-ip_address">inet:ip_address()</a> | <a href="inet.html#type-hostname">inet:hostname()</a>} | {dest_port, <a href="inet.html#type-port_number">inet:port_number()</a>} | {facility, <a href="#type-facility">facility()</a>} | {error_facility, <a href="#type-facility">facility()</a>} | {use_rfc5424_bom, boolean()}</tt></p>
+<p><tt>option() = {dest_host, <a href="inet.html#type-ip_address">inet:ip_address()</a> | <a href="inet.html#type-hostname">inet:hostname()</a>} | {dest_port, <a href="inet.html#type-port_number">inet:port_number()</a>} | {error_facility, <a href="#type-facility">facility()</a>} | {facility, <a href="#type-facility">facility()</a>} | {msg_queue_limit, Limit::pos_integer() | infinity} | {protocol, rfc3164 | rfc5424} | {use_rfc5424_bom, boolean()} | {verbose, true | {false, Depth::pos_integer()}}</tt></p>
 
 
 <h3 class="typedecl"><a name="type-severity">severity()</a></h3>
@@ -38,46 +37,83 @@ to log messages with a certain severity.</p>
 
 
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#disable-0">disable/0</a></td><td>
-  Disable SASL report logging via <code>syslog</code>.</td></tr>
-<tr><td valign="top"><a href="#enable-0">enable/0</a></td><td>
-  Enable SASL report logging via <code>syslog</code>.</td></tr>
-<tr><td valign="top"><a href="#log-2">log/2</a></td><td>
-  Log a message with a specific severity.</td></tr>
-<tr><td valign="top"><a href="#log-3">log/3</a></td><td>
-  Log a format message with a specific severity.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#error_msg-1">error_msg/1</a></td><td>
+  Sends a message with severity <code>error</code>.</td></tr>
+<tr><td valign="top"><a href="#error_msg-2">error_msg/2</a></td><td>
+  Sends a format message with severity <code>error</code>.</td></tr>
+<tr><td valign="top"><a href="#info_msg-1">info_msg/1</a></td><td>
+  Sends a message with severity <code>notice</code>.</td></tr>
+<tr><td valign="top"><a href="#info_msg-2">info_msg/2</a></td><td>
+  Sends a format message with severity <code>notice</code>.</td></tr>
+<tr><td valign="top"><a href="#msg-3">msg/3</a></td><td>
+  Logs a format message with a specific severity.</td></tr>
+<tr><td valign="top"><a href="#msg-4">msg/4</a></td><td>
+  Logs a format message with a specific severity from a specific process.</td></tr>
+<tr><td valign="top"><a href="#warning_msg-1">warning_msg/1</a></td><td>
+  Sends a message with severity <code>warning</code>.</td></tr>
+<tr><td valign="top"><a href="#warning_msg-2">warning_msg/2</a></td><td>
+  Sends a format message with severity <code>warning</code>.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="disable-0">disable/0</a></h3>
+<h3 class="function"><a name="error_msg-1">error_msg/1</a></h3>
 <div class="spec">
-<p><tt>disable() -&gt; ok</tt><br></p>
+<p><tt>error_msg(Msg::string()) -&gt; ok</tt><br></p>
 </div><p>
-  Disable SASL report logging via <code>syslog</code>. This will also re-enable the
-  standard <code>error_logger</code> TTY output, if successful.</p>
+  Sends a message with severity <code>error</code>. Like the <code>error_logger</code> counterpart
+  this function never fails.</p>
 
-<h3 class="function"><a name="enable-0">enable/0</a></h3>
+<h3 class="function"><a name="error_msg-2">error_msg/2</a></h3>
 <div class="spec">
-<p><tt>enable() -&gt; ok</tt><br></p>
+<p><tt>error_msg(Fmt::string(), Args::[term()]) -&gt; ok</tt><br></p>
 </div><p>
-  Enable SASL report logging via <code>syslog</code>. This will also disable the standard
-  <code>error_logger</code> TTY output, if successful.</p>
+  Sends a format message with severity <code>error</code>. Like the <code>error_logger</code>
+  counterpart this function never fails.</p>
 
-<h3 class="function"><a name="log-2">log/2</a></h3>
+<h3 class="function"><a name="info_msg-1">info_msg/1</a></h3>
 <div class="spec">
-<p><tt>log(Severity::<a href="#type-severity">severity()</a>, Msg::string()) -&gt; ok</tt><br></p>
+<p><tt>info_msg(Msg::string()) -&gt; ok</tt><br></p>
 </div><p>
-  Log a message with a specific severity.</p>
+  Sends a message with severity <code>notice</code>. Like the <code>error_logger</code> counterpart
+  this function never fails.</p>
 
-<h3 class="function"><a name="log-3">log/3</a></h3>
+<h3 class="function"><a name="info_msg-2">info_msg/2</a></h3>
 <div class="spec">
-<p><tt>log(Severity::<a href="#type-severity">severity()</a>, Fmt::string(), Args::[term()]) -&gt; ok</tt><br></p>
+<p><tt>info_msg(Fmt::string(), Args::[term()]) -&gt; ok</tt><br></p>
 </div><p>
-  Log a format message with a specific severity.</p>
+  Sends a format message with severity <code>notice</code>. Like the <code>error_logger</code>
+  counterpart this function never fails.</p>
+
+<h3 class="function"><a name="msg-3">msg/3</a></h3>
+<div class="spec">
+<p><tt>msg(Severity::<a href="#type-severity">severity()</a>, Fmt::string(), Args::[term()]) -&gt; ok</tt><br></p>
+</div><p>
+  Logs a format message with a specific severity. This function never fails.</p>
+
+<h3 class="function"><a name="msg-4">msg/4</a></h3>
+<div class="spec">
+<p><tt>msg(Severity::<a href="#type-severity">severity()</a>, Pid::pid(), Fmt::string(), Args::[term()]) -&gt; ok</tt><br></p>
+</div><p>
+  Logs a format message with a specific severity from a specific process. This
+  function never fails.</p>
+
+<h3 class="function"><a name="warning_msg-1">warning_msg/1</a></h3>
+<div class="spec">
+<p><tt>warning_msg(Msg::string()) -&gt; ok</tt><br></p>
+</div><p>
+  Sends a message with severity <code>warning</code>. Like the <code>error_logger</code> counterpart
+  this function never fails.</p>
+
+<h3 class="function"><a name="warning_msg-2">warning_msg/2</a></h3>
+<div class="spec">
+<p><tt>warning_msg(Fmt::string(), Args::[term()]) -&gt; ok</tt><br></p>
+</div><p>
+  Sends a format message with severity <code>warning</code>. Like the <code>error_logger</code>
+  counterpart this function never fails.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Apr 11 2013, 14:38:06.</i></p>
+<p><i>Generated by EDoc, Apr 16 2013, 08:48:44.</i></p>
 </body>
 </html>

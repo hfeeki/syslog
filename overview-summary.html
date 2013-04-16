@@ -14,35 +14,46 @@
 
 <h3><a name="syslog">syslog</a></h3>
 
-<p>A Syslog based logger for <code>error_logger</code> reports. This project is strongly
-inspired by the <a href="http://github.com/travelping/sasl_syslog">sasl_syslog</a> project
-Which in fact delivers quite similar functionality.</p>
+<p>A Syslog based logging framework for erlang. This project is inspired by the
+two great work put in the two projects
+<a href="http://github.com/travelping/sasl_syslog">sasl_syslog</a> and
+<a href="http://github.com/basho/lager">lager</a>. In fact <code>syslog</code> delivers quite
+similar functionality.</p>
 
-<p>The main differences between <code>sasl_syslog</code> and <code>syslog</code> are the RFC 3164
-(BSD Syslog) compliant protocol backend as well as some features that were
-borrowed from the <a href="http://github.com/basho/lager">lager</a> project, e.g. having
-the possibility to log into separate files for <code>info</code> and <code>error</code> or <code>progress</code>
-reports.</p>
+<p>The main difference between <code>sasl_syslog</code> and <code>syslog</code> is that <code>sasl_syslog</code>
+does only provide logging of <code>error_logger</code> reports. However, the <code>error_logger</code>
+is known for its bad memory consumption behaviour under heavy load (due to its
+asynchronous logging mechanism). Additionally, <code>syslog</code> provides an optional
+RFC 3164 (BSD Syslog) compliant protocol backend which is the only standard
+supported by old versions of e.g. <code>syslog-ng</code> or <code>rsyslog</code>.</p>
+
+<p>On the other side, compared to <code>lager</code>, the <code>syslog</code> application has a very
+limited feature set. As its name infers <code>syslog</code> is specialized on delivering
+its messages using Syslog only, there are no file or console backends with
+custom-written and configurable log rotation or line formatting. However,
+<code>syslog</code> does not rely on port drivers or NIFs to implement the Syslog protocol
+and it includes several robustness features comparable to <code>lager</code>.</p>
+
+<p>In a nutshell <code>syslog</code> can be seen as a lightweight logging framework using
+available Syslog daemons/servers.</p>
 
 <p><li> <a href="http://github.com/schlagert/syslog">Code</a></li>
 <li> <a href="http://schlagert.github.com/syslog">EDoc</a></li></p>
 
 <h4><a name="Features">Features</a></h4>
 
-<p><li> Write standard <code>error_logger</code> messages/reports using the Syslog protocol</li>
-  without the need of drivers, ports or NIFs.
-<li> Send messages according to RFC 3164 (BSD Syslog) or RFC 5424 (Syslog Protocol).</li>
-<li> Robust event handler by using a supervised event handler subscription.</li>
-<li> Optionally write messages with severity <code>critical</code> or <code>error</code> into a separate</li>
-  facility.
-<li> No load on the <code>application_controller</code> ETS table (do not query the</li>
-  application environment when constructing a message).
-<li> Get the well-known SASL event format for <code>supervisor</code> and <code>crash</code> reports.</li></p>
+<p><li> Log messages and standard <code>error_logger</code> reports according to RFC 3164</li>
+  (BSD Syslog) or RFC 5424 (Syslog Protocol) without the need of drivers, ports
+  or NIFs.
+<li> Robust event handlers by using a supervised event handler subscription.</li>
+<li> Optionally separate error messages using a separate facility.</li>
+<li> Get the well-known SASL event format for <code>supervisor</code> and <code>crash</code> reports.</li>
+<li> Configurable verbosity of SASL printing format (printing depth is also</li>  
+configurable).</p>
 
 <h4><a name="Planned">Planned</a></h4>
 
 <p><li> Configurable maximum packet size.</li>
-<li> Configurable short/verbose printing format for progress reports.</li>
 <li> Utilize the RFC 5424 _STRUCTURED-DATA_ field for <code>info_report</code>,</li>
   <code>warning_report</code> or <code>error_report</code> with <code>proplists</code>.</p>
 
@@ -51,18 +62,12 @@ reports.</p>
 <p>The following configuration options are available and can be configured in the
 application environment:</p>
 
-<p><li> <code>{enabled, boolean()}</code></li></p>
-
-  <p>Indicating whether Syslog reporting should be started when the <code>syslog</code>
-  application gets started. Default is <code>true</code>.</p>
-
-<p><li> <code>{msg_queue_limit, pos_integer() | infinity}</code></li></p>
+<p><li> <code>{msg_queue_limit, Limit · pos_integer() | infinity}</code></li></p>
 
   <p>Specifies the number of entries in the <code>error_logger</code> message queue to which
-  <code>info_msg</code> and <code>info_report</code> events are processed. If the message queue size
-  does exceed this limit, informational messages will be _dropped_ by the
-  <code>syslog</code> application until the message queue recovers. However, error and
-  warning messages/reports will always be processed. Default is <code>infinity</code>.</p>
+  events are processed. If the message queue size exceeds this limit messages
+  <code>syslog</code> will _drop_ the amount of events exceeding the limit. Default is
+  <code>infinity</code>.</p>
 
 <p><li> <code>{protocol, rfc3164 | rfc5424}</code></li></p>
 
@@ -83,14 +88,29 @@ application environment:</p>
 
   <p>Specifies the port to which Syslog packets will be sent. Default is <code>514</code>.</p>
 
-<p><li> <code>{facility, facility()}</code></li></p>
+<p><li> <code>{facility, syslog:facility()}</code></li></p>
 
   <p>Specifies the facility Syslog packets will be sent with. Default is <code>daemon</code>.</p>
 
-<p><li> <code>{error_facility, facility()}</code></li></p>
+<p><li> <code>{error_facility, syslog:facility()}</code></li></p>
 
-  <p>Specifies the facility Syslog packets with severity <code>error</code> or <code>critical</code> will
-  be sent with. Default is <code>daemon</code>.</p>
+  <p>Specifies the facility Syslog packets with severity <code>error</code>, <code>critical</code>,
+  <code>alert</code> or <code>emergency</code> will be sent with. Default is <code>daemon</code>.</p>
+
+<p><li> <code>{verbose, true | {false, Depth · pos_integer()}}</code></li></p>
+
+  <p>Configures which pretty printing mode will be used when formatting
+  <code>error_logger</code> reports (e.g. progress reports, not format messages). If
+  verbose is <code>true</code> the <code>~p</code> format character will be used when formatting
+  terms. This will likely result in many multiline strings. If set to
+  <code>{false, Depth}</code> the <code>~P</code> format character will be used along with the  
+specified printing depth.</p>
+
+The <code>syslog</code> application will disable the standard <code>error_logger</code> TTY output on
+application startup. This has nothing to do with the standard SASL logging. It
+only disables non-SASL logging via, e.g. <code>error_logger:info_msg/1,2</code>. This
+standard logging can be re-enabled at any time using the following:
+<pre>error_logger:tty(true).</pre>
 
 The <code>syslog</code> application will not touch the standard SASL report handlers
 attached to the <code>error_logger</code> when SASL starts. However, having SASL progress
@@ -102,18 +122,11 @@ attach any TTY handlers to the <code>error_logger</code>:
 
 <h4><a name="API">API</a></h4>
 
-<p>The <code>syslog</code> application will log everything logged with the standard
-<code>error_logger</code> API. However, for convenience, <code>syslog</code> provides the two API
-functions <code>syslog:log/2</code> and <code>syslog:log/3</code> to log messages directly with a
-specific severity.</p>
-
-In some cases users may only want to include the application into their release
-without enabling it by default. This can be achieved by disabling the
-application in the release's <code>sys.config</code> file as followed:
-<pre>{syslog, [{enabled, false}]}</pre>
-
-Syslog logging can then be switched on and off using the <code>syslog:enable/0</code>
-and <code>syslog:disable/0</code> API functions.
+The <code>syslog</code> application will log everything logged with the standard
+<code>error_logger</code> API. However, this should not be used for ordinary logging.
+This should be done via the API functions provided by the <code>syslog</code> module
+which provides functions similar to the ones provided by the <code>error_logger</code>
+module (see the <code>*msg/1,2</code> functions).
 <script>
 // Jump directly to a referenced url given in trailing '[]:...'-notation
 function goto(tag) { parent.document.location.href = url(tag); }
@@ -122,6 +135,6 @@ function url(tag) { var o=document.getElementById(tag); return o ? o.href : '#'+
 
 <hr>
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Apr 11 2013, 14:38:06.</i></p>
+<p><i>Generated by EDoc, Apr 16 2013, 08:48:44.</i></p>
 </body>
 </html>
