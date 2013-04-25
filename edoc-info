@@ -1,5 +1,0 @@
-%% encoding: UTF-8
-{application,syslog}.
-{packages,[]}.
-{modules,[syslog,syslog_error_h,syslog_lib,syslog_logger_h,syslog_monitor,
-          syslog_rfc3164,syslog_rfc5424]}.
