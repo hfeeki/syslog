@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>syslog - An RFC3164 and RF5424 compliant logging framework for Erlang.
+</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<h1>syslog - An RFC3164 and RF5424 compliant logging framework for Erlang.
+</h1>
+
+
+<h3><a name="syslog">syslog</a></h3>
+
+<p>A Syslog based logging framework for erlang. This project is inspired by the
+great work put in the two projects
+<a href="http://github.com/travelping/sasl_syslog">sasl_syslog</a> and
+<a href="http://github.com/basho/lager">lager</a>. In fact <code>syslog</code> tries to combine both
+approaches. In a nutshell <code>syslog</code> can be seen as a lightweight version of the
+<code>lager</code> logging framework supporting only a fully compliant, Erlang-only Syslog
+backend allowing remote logging.</p>
+
+<p>The main difference between <code>sasl_syslog</code> and <code>syslog</code> is that <code>sasl_syslog</code>
+does only provide logging of <code>error_logger</code> reports. However, the <code>error_logger</code>
+is known for its bad memory consumption behaviour under heavy load (due to its
+asynchronous logging mechanism). Additionally, <code>syslog</code> provides an optional
+RFC 3164 (BSD Syslog) compliant protocol backend which is the only standard
+supported by old versions of e.g. <code>syslog-ng</code> or <code>rsyslog</code>.</p>
+
+<p>Compared to <code>lager</code>, <code>syslog</code> has a very limited set of backends. As its name
+infers <code>syslog</code> is specialized on delivering its messages using Syslog only,
+there is no file or console backend, no custom-written and configurable log
+rotation, no line formatting and no tracing support. However, <code>syslog</code> does not
+rely on port drivers or NIFs to implement the Syslog protocol and it includes
+most of the beloved features known from <code>lager</code>, e.g. sync/async logging and
+supervised event handler registration.</p>
+
+<p><li> <a href="http://github.com/schlagert/syslog">Code</a></li>
+<li> <a href="http://schlagert.github.com/syslog">EDoc</a></li></p>
+
+<h4><a name="Features">Features</a></h4>
+
+<p><li> Log messages and standard <code>error_logger</code> reports according to RFC 3164</li>
+  (BSD Syslog) or RFC 5424 (Syslog Protocol) without the need of drivers, ports
+  or NIFs.
+<li> Robust event handlers by using a supervised event handler subscription.</li>
+<li> Optionally separate error messages using a separate facility.</li>
+<li> Get the well-known SASL event format for <code>supervisor</code> and <code>crash</code> reports.</li>
+<li> Configurable verbosity of SASL printing format (printing depth is also</li>
+  configurable).
+<li> Throughput optimization by dynamically switching from synchronous to</li>  
+asynchronous mode.</p>
+
+<h4><a name="Planned">Planned</a></h4>
+
+<p><li> Configurable maximum packet size.</li>
+<li> Utilize the RFC 5424 _STRUCTURED-DATA_ field for <code>info_report</code>,</li>
+  <code>warning_report</code> or <code>error_report</code> with <code>proplists</code>.</p>
+
+<h4><a name="Configuration">Configuration</a></h4>
+
+<p>The <code>syslog</code> application already comes with sensible defaults (except for
+example the used facilites and the destination host). However, many things can
+be cusomized if desired. For this purpose the following configuration options
+are available and can be configured in the application environment:</p>
+
+<p><li> <code>{msg_queue_limit, Limit · pos_integer() | infinity}</code></li></p>
+
+  <p>Specifies the number of entries in the <code>error_logger</code> message queue to which
+  events are processed. If the message queue size exceeds this limit messages
+  <code>syslog</code> will _drop_ the amount of events exceeding the limit. Default is
+  <code>infinity</code>.</p>
+
+<p><li> <code>{protocol, rfc3164 | rfc5424}</code></li></p>
+
+  <p>Specifies which protocol standard should be used to format outgoing Syslog
+  packets. Default is <code>rfc3164</code>.</p>
+
+<p><li> <code>{use_rfc5424_bom, boolean()}</code></li></p>
+
+  <p>Specifies whether the RFC5424 protocol backend should include the UTF-8 BOM
+  in the message part of a Syslog packet. Default is <code>false</code>.</p>
+
+<p><li> <code>{dest_host, inet:ip_address() | inet:hostname()}</code></li></p>
+
+  <p>Specifies the host to which Syslog packets will be sent. Default is
+  <code>{127, 0, 0, 1}</code>.</p>
+
+<p><li> <code>{dest_port, inet:port_number()}</code></li></p>
+
+  <p>Specifies the port to which Syslog packets will be sent. Default is <code>514</code>.</p>
+
+<p><li> <code>{facility, syslog:facility()}</code></li></p>
+
+  <p>Specifies the facility Syslog packets will be sent with. Default is <code>daemon</code>.</p>
+
+<p><li> <code>{error_facility, syslog:facility()}</code></li></p>
+
+  <p>Specifies the facility Syslog packets with severity <code>error</code>, <code>critical</code>,
+  <code>alert</code> or <code>emergency</code> will be sent with. Default is <code>daemon</code>.</p>
+
+<p><li> <code>{verbose, true | {false, Depth · pos_integer()}}</code></li></p>
+
+  <p>Configures which pretty printing mode will be used when formatting
+  <code>error_logger</code> reports (e.g. progress reports, not format messages). If
+  verbose is <code>true</code> the <code>~p</code> format character will be used when formatting
+  terms. This will likely result in many multiline strings. If set to
+  <code>{false, Depth}</code> the <code>~P</code> format character will be used along with the
+  specified printing depth. Default is <code>true</code>.</p>
+
+<p><li> <code>{no_progress, boolean()}</code></li></p>
+
+  <p>This flag can be used to completely omit progress reports from the logging
+  output. So if you you don't care when a new process gets started set this to
+  <code>true</code>. Default is <code>false</code>.</p>
+
+<p><li> <code>{async_limit, pos_integer()}</code></li></p>
+
+  <p>Specified the number of entries in the <code>syslog_logger</code> message queue to which
+  asynchronous logging is allowed. As long as the message queue does not exceed
+  this limit every logging statement will by asynchronous. If the message queue
+  length exceeds this limit all logging statements will be synchronous, blocking
+  the calling process until the logging request was processed. Default is <code>30</code>.</p>
+
+The <code>syslog</code> application will disable the standard <code>error_logger</code> TTY output on
+application startup. This has nothing to do with the standard SASL logging. It
+only disables non-SASL logging via, e.g. <code>error_logger:info_msg/1,2</code>. This
+standard logging can be re-enabled at any time using the following:
+<pre>error_logger:tty(true).</pre>
+
+The <code>syslog</code> application will not touch the standard SASL report handlers
+attached to the <code>error_logger</code> when SASL starts. However, having SASL progress
+reports on TTY can be quite annoying when trying to use the shell. The correct
+way to disable this output is to configure the SASL application in the
+<code>sys.config</code> of a release, e.g. the following line will command SASL to not
+attach any TTY handlers to the <code>error_logger</code>:
+<pre>{sasl, [{sasl_error_logger, false}]}</pre>
+
+<h4><a name="API">API</a></h4>
+
+<p>The <code>syslog</code> application will log everything logged with the standard
+<code>error_logger</code> API. However, this should not be used for ordinary logging.
+This should be done via the API functions provided by the <code>syslog</code> module
+which provides functions similar to the ones provided by the <code>error_logger</code>
+module (see the <code>*msg/1,2</code> functions).</p>
+
+<h4><a name="Performance">Performance</a></h4>
+
+<p>Performance profiling has been made with a small script located in the
+<code>benchmark</code> subdirectory. The figure below shows the results of
+<code>benchmark.escript all 100 10000</code> on an Intel® Core™2 Duo CPU running R16B.</p>
+
+<p>The above line would start a benchmark that spawns 100 processes that send log
+message using a specific logging framework in a tight loop for 10000ms. All log
+messages will be delivered over UDP (faked remote Syslog) to a socket opened by
+the benchmark process. The total duration is the time needed to spawn the
+processes, send the messages __and__ the time needed to receive all sent
+messages on the socket the benchmark process listens on.</p>
+
+<p><img src="http://schlagert.github.com/syslog/benchmark.svg" alt="benchmark results"></p>
+
+<p>As expected <code>syslog</code> and <code>lager</code> are the top performers. The main reason why
+they outperform <code>log4erl</code> is the dynamic toggling of synchronous/asynchronous
+logging (<code>log4erl</code> uses synchronous logging only).</p>
+
+<p>Since <code>sasl_syslog</code> uses the asynchronous <code>error_logger</code> the number of messages
+sent is quite huge. However, it also takes a huge amount of time and memory to
+process the long <code>error_logger</code> message queue. This is also responsible for the
+low number of messages sent per second in total.</p>
+
+<p>A word about the performance of <code>lager</code>. Fitting <code>lager</code> into the benchmark
+unfortunately is a bit tricky since the benchmark needs to know when all
+messages were processed. However, <code>lager_syslog</code> uses a C port driver calling
+<code>vsyslog</code> and thus does not support remote syslog. So instead of testing the
+<code>lager_syslog_backend</code> the benchmark uses the <code>lager_console_backend</code>, setting
+itself as the receiver for I/O messages and forwards them to the UDP socket
+earlier mentioned. This in fact might slowdown <code>lager</code> which would explain the
+slightly better results of <code>syslog</code>.</p>
+
+<h4><a name="Supervision">Supervision</a></h4>
+
+<p><img src="http://schlagert.github.com/syslog/syslog.svg" alt="syslog supervision"></p>
+
+For curiosity, the above illustration shows the very simple supervision
+hierarchy used by the <code>syslog</code> application.
+<script>
+// Jump directly to a referenced url given in trailing '[]:...'-notation
+function goto(tag) { parent.document.location.href = url(tag); }
+function url(tag) { var o=document.getElementById(tag); return o ? o.href : '#'+tag; }
+</script>
+
+<hr>
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Apr 25 2013, 17:36:53.</i></p>
+</body>
+</html>

@@ -144,10 +144,7 @@ module (see the <code>*msg/1,2</code> functions).
 
 Performance profiling has been made with a small script located in the
 <code>benchmark</code> subdirectory. The figure below shows the results of
-```
-benchmark.escript all 100 10000
-'''
-on an Intel&#174; Core&#153;2 Duo CPU running R16B.
+<code>benchmark.escript all 100 10000</code> on an Intel&#174; Core&#153;2 Duo CPU running R16B.
 
 The above line would start a benchmark that spawns 100 processes that send log
 message using a specific logging framework in a tight loop for 10000ms. All log
@@ -171,7 +168,7 @@ A word about the performance of <code>lager</code>. Fitting <code>lager</code> i
 unfortunately is a bit tricky since the benchmark needs to know when all
 messages were processed. However, <code>lager_syslog</code> uses a C port driver calling
 <code>vsyslog</code> and thus does not support remote syslog. So instead of testing the
-lager_syslog_backend<code> the benchmark uses the </code>lager_console_backend`, setting
+<code>lager_syslog_backend</code> the benchmark uses the <code>lager_console_backend</code>, setting
 itself as the receiver for I/O messages and forwards them to the UDP socket
 earlier mentioned. This in fact might slowdown <code>lager</code> which would explain the
 slightly better results of <code>syslog</code>.
