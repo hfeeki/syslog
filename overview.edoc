@@ -29,12 +29,14 @@ logging and supervised event handler registration.
 
 <li> <a href="http://github.com/schlagert/syslog">Code</a></li>
 <li> <a href="http://schlagert.github.com/syslog">EDoc</a></li>
+<li> <a href="https://travis-ci.org/schlagert/syslog.png?branch=master">![Build Status</a>](https://travis-ci.org/schlagert/syslog)</li>
 
 === Features ===
 
 <li> Log messages and standard <code>error_logger</code> reports according to RFC 3164</li>
   (BSD Syslog) or RFC 5424 (Syslog Protocol) without the need for drivers,
   ports or NIFs.
+<li> System independent logging to local or remote facilities using UDP.</li>
 <li> Robust event handlers - using supervised event handler subscription.</li>
 <li> Optionally independent error messages using a separate facility.</li>
 <li> Get the well-known SASL event format for <code>supervisor</code> and <code>crash</code> reports.</li>
@@ -145,7 +147,7 @@ provided by the <code>error_logger</code> module and should feel familiar (see t
 === Performance ===
 
 Performance profiling has been made with a small script located in the
-<code>benchmark</code> subdirectory. The figures below shows the results of
+<code>benchmark</code> subdirectory. The figures below show the results of
 <code>benchmark.escript all 100 10000</code> on an Intel&#174; Core&#153;2 Duo CPU running R16B.
 
 The above line starts a benchmark that will spawn 100 processes that each send
@@ -172,7 +174,7 @@ messages were processed. However, <code>lager_syslog</code> uses a C port driver
 <code>vsyslog</code> and thus does not support remote syslog. So instead of testing the
 <code>lager_syslog_backend</code> the benchmark uses the <code>lager_console_backend</code>, setting
 itself as the receiver for I/O messages and forwards them to the UDP socket
-mentioned earlier. This would in fact slow down <code>lager</code> a bit, which would 
+mentioned earlier. This would in fact slow down <code>lager</code> a bit, which would
 explain the slightly better performance of <code>syslog</code>.
 
 === Supervision ===
